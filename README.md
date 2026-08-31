@@ -19,28 +19,6 @@ The maze contains a visible **"42"** drawn with fully closed cells, the outer bo
 
 ---
 
-## Demo
-
-<img src="assets/maze-demo.svg" alt="Animated demo: recursive-backtracker carving a perfect maze, then the shortest path being highlighted" width="500"/>
-
-*A simplified, schematic replay of the algorithm: walls disappear as the recursive backtracker carves the maze, then the shortest path (breadth-first search) lights up. Save the SVG at `assets/maze-demo.svg` in the repository for it to render here — it's a self-contained animated image (no JS needed) and loops automatically in any browser, including on GitHub.*
-
----
-
-## 🎬 Demo
-
-<p align="center">
-  <img src="assets/maze-demo.svg" alt="Animated demo: recursive-backtracker carving a perfect maze, then the shortest path being highlighted" width="680"/>
-</p>
-
-*A schematic replay of the algorithm:*
-1. **Wall Reservation:** The central "42" pattern is locked as impassable obstacles.
-2. **Carving (DFS):** Walls disappear as the randomized recursive backtracker carves the perfect maze.
-3. **Solving (BFS):** The shortest path from Entry to Exit is computed and highlighted.
-
----
----
-
 ## Instructions
 
 ### Requirements
