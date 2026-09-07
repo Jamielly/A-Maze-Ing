@@ -1,0 +1,53 @@
+# **************************************************************************** #
+#                                                                              #
+#    config.txt - Arquivo de Configuração do Gerador de Labirintos             #
+#    Projeto: A-Maze-ing (42 Network)                                          #
+#                                                                              #
+#    Regras de Formato:                                                        #
+#    - Um par CHAVE=VALOR por linha (maiúsculas ou minúsculas são aceitas)     #
+#    - Linhas iniciadas com '#' são comentários e devem ser ignoradas          #
+#    - Linhas em branco devem ser ignoradas                                    #
+#                                                                              #
+# **************************************************************************** #
+
+# ---------------------------------------------------------------------------- #
+# 1. DIMENSÕES DO TABULEIRO (GRID)
+# ---------------------------------------------------------------------------- #
+# WIDTH: Largura do labirinto (número de células na horizontal). Deve ser > 0.
+WIDTH=20
+
+# HEIGHT: Altura do labirinto (número de células na vertical). Deve ser > 0.
+HEIGHT=15
+
+# ---------------------------------------------------------------------------- #
+# 2. COORDENADAS DE ENTRADA E SAÍDA
+# ---------------------------------------------------------------------------- #
+# Formato: x,y (onde x varia de 0 a WIDTH-1, e y varia de 0 a HEIGHT-1)
+# Devem ser coordenadas diferentes e localizadas nas bordas externas do labirinto.
+
+# ENTRY: Ponto de partida do jogador.
+ENTRY=0,0
+
+# EXIT: Ponto de chegada / objetivo.
+EXIT=19,14
+
+# ---------------------------------------------------------------------------- #
+# 3. CONTROLE DE GERAÇÃO E PERSISTÊNCIA
+# ---------------------------------------------------------------------------- #
+# PERFECT: Define a lógica de geração do tabuleiro.
+# - True: Cria um "Labirinto Perfeito" (spanning tree) com um único caminho 
+#   válido entre entrada e saída, sem loops/ciclos. Cada ramificação é um beco.
+# - False: Cria um tabuleiro para Pac-Man. Totalmente conectado, com os 4 cantos
+#   e o centro abertos, e no mínimo 2 loops (caminhos alternativos de fuga).
+PERFECT=True
+
+# OUTPUT_FILE: Nome do arquivo texto onde a matriz hexadecimal do labirinto 
+# gerado e sua respectiva solução serão gravados.
+OUTPUT_FILE=maze.txt
+
+# ---------------------------------------------------------------------------- #
+# 4. PARÂMETROS OPCIONAIS (REPRODUTIBILIDADE)
+# ---------------------------------------------------------------------------- #
+# SEED: Semente numérica para o gerador de números pseudo-aleatórios.
+# Garante que o mesmo labirinto seja gerado novamente ao rodar com a mesma seed.
+SEED=42
