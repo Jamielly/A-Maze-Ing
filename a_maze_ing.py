@@ -1,25 +1,29 @@
-#!/usr/bin/env python3
-"""Main entry point for the A-Maze-ing application."""
-
+```
+import time
 import sys
-from src.controller import GameController
+from typing import List, Tuple
 
+def render_animation_frame(grid: List[List[int]], head: Tuple[int, int], delay: float = 0.02) -&gt; None:
+    """Desenha um quadro da animação no terminal com reposicionamento ANSI."""
+    # Reposiciona o cursor no topo da tela sem piscar (ANSI \033[H)
+    sys.stdout.write("\033[H")
+    
+    # Renderiza o labirinto no terminal pintando a célula 'head' de destaque (ex: amarelo)
+    draw_maze_terminal(grid, current_head=head)
+    sys.stdout.flush()
+    time.sleep(delay)
 
-def main() -> None:
-    """Validate command line arguments and launch the maze application."""
-    if len(sys.argv) != 2:
-        sys.stderr.write("Usage: python3 a_maze_ing.py <config.txt>\n")
-        sys.exit(1)
-
-    config_file = sys.argv[1]
-
+def generate_animated_maze(generator, config) -&gt; None:
+    """Prepara a tela e chama o gerador com a animação ativa."""
+    # Oculta o cursor do terminal
+    sys.stdout.write("\033[?25l")
     try:
-        controller = GameController(config_file)
-        controller.run()
-    except Exception as e:
-        sys.stderr.write(f"Error: {e}\n")
-        sys.exit(1)
+        generator.generate(
+            step_callback=lambda grid, head: render_animation_frame(grid, head, delay=0.015)
+        )
+    finally:
+        # Garante que o cursor volte a aparecer mesmo em caso de erro
+        sys.stdout.write("\033[?25h")
+        sys.stdout.flush()
 
-
-if __name__ == "__main__":
-    main()
+```
