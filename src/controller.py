@@ -67,6 +67,8 @@ class GameController:
                 break
 
             if choice == "1":
+                if self.config.animate:
+                    self.renderer.clear_screen()
                 path_coords, _ = self._generate_and_export(
                     None,
                     step_callback=active_callback,

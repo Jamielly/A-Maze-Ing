@@ -37,10 +37,7 @@ def main() -> None:
         controller = GameController(config_file)
 
         if controller.config.animate:
-            sys.stdout.write("\033[?25l")
-            sys.stdout.write("\033[2J")
-            sys.stdout.write("\033[H")
-            sys.stdout.flush()
+            renderer.clear_screen()
 
         try:
             controller.run(

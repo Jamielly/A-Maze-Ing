@@ -100,6 +100,11 @@ class TerminalRenderer:
 
         return lines
 
+    def clear_screen(self) -> None:
+        """Clear the terminal screen and scrollback buffer."""
+        sys.stdout.write("\033[H\033[2J\033[3J\033[?25l")
+        sys.stdout.flush()
+
     def render_generation(
         self,
         grid: list[list["Cell"]],
@@ -139,12 +144,12 @@ class TerminalRenderer:
 
         frame_parts = [
             "\033[H\033[?25l",
-            header,
-            *visible_lines,
-            "",
-            footer_status,
+            header + "\033[K",
+            *(line + "\033[K" for line in visible_lines),
+            "\033[K",
+            footer_status + "\033[K",
         ]
-        sys.stdout.write("\n".join(frame_parts))
+        sys.stdout.write("\n".join(frame_parts) + "\033[J")
         sys.stdout.flush()
 
     def render(
@@ -175,7 +180,7 @@ class TerminalRenderer:
 
         path_status = "ON" if self.show_path else "OFF"
         output_parts = [
-            "\033[H\033[2J\033[?25h",
+            "\033[H\033[2J\033[3J\033[?25h",
             "=== A-Maze-ing ===",
             *maze_lines,
             f"\nPath display: {path_status}",
