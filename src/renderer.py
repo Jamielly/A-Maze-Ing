@@ -136,9 +136,9 @@ class TerminalRenderer:
 
                 coord = (x, y)
                 if coord == entry:
-                    buffer[cy][cx] = "\033[95mE\033[0m"
+                    buffer[cy][cx] = "\033[95m🛸\033[0m"
                 elif coord == exit_pos:
-                    buffer[cy][cx] = "\033[91mX\033[0m"
+                    buffer[cy][cx] = "\033[91m🐄\033[0m"
                 elif cell.is_pattern_42:
                     buffer[cy][cx] = "\033[90m█\033[0m"
                 elif coord in path_set:
