@@ -9,7 +9,7 @@ from src.controller import GameController
 from src.renderer import TerminalRenderer
 
 
-ANIMATION_DELAY = 0.015
+ANIMATION_DELAY = 0.01
 
 
 def render_animation_frame(
@@ -53,9 +53,8 @@ def main() -> None:
                 )
             )
         finally:
-            if controller.config.animate:
-                sys.stdout.write("\033[?25h")
-                sys.stdout.flush()
+            sys.stdout.write("\033[?25h")
+            sys.stdout.flush()
 
     except KeyboardInterrupt:
         sys.stdout.write("\033[?25h")

@@ -140,6 +140,9 @@ class MazeGenerator:
 
         self.grid[start_y][start_x].visited = True
 
+        if step_callback:
+            step_callback(self.grid, (start_x, start_y))
+
         directions = [
             (Cell.NORTH, 0, -1, Cell.SOUTH),
             (Cell.EAST, 1, 0, Cell.WEST),
@@ -149,12 +152,6 @@ class MazeGenerator:
 
         while stack:
             current_x, current_y = stack[-1]
-
-            if step_callback:
-                step_callback(
-                    self.grid,
-                    (current_x, current_y),
-                )
 
             neighbors: list[
                 tuple[int, int, int, int]
@@ -211,6 +208,12 @@ class MazeGenerator:
             self.grid[next_y][next_x].visited = True
 
             stack.append((next_x, next_y))
+
+            if step_callback:
+                step_callback(
+                    self.grid,
+                    (next_x, next_y),
+                )
 
     def _find_valid_start(self) -> tuple[int, int]:
         """Find the first cell outside the 42 pattern."""
