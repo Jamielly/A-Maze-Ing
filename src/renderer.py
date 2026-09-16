@@ -8,8 +8,7 @@ if TYPE_CHECKING:
 
 
 class TerminalRenderer:
-    """Render the maze and interactive
-    menu in the terminal using ANSI colors."""
+    """Render the maze and interactive menu using ANSI colors."""
 
     def __init__(self) -> None:
         """Initialize renderer options and ANSI color palettes."""
@@ -31,6 +30,65 @@ class TerminalRenderer:
         """Cycle to the next wall color palette."""
         self.color_index = (self.color_index + 1) % len(self.palettes)
 
+    def render_generation(
+        self,
+        grid: list[list["Cell"]],
+        head: tuple[int, int],
+    ) -> None:
+        """Render a single animation frame during maze generation."""
+        height = len(grid)
+        if height == 0:
+            return
+
+        width = len(grid[0])
+        if width == 0:
+            return
+
+        wall_color = self.palettes[self.color_index]
+        print("\033[H", end="")
+
+        buf_h = 2 * height + 1
+        buf_w = 2 * width + 1
+        buffer: list[list[str]] = [
+            [" " for _ in range(buf_w)] for _ in range(buf_h)
+        ]
+
+        for r_idx in range(0, buf_h, 2):
+            for c_idx in range(0, buf_w, 2):
+                buffer[r_idx][c_idx] = "█"
+
+        for y in range(height):
+            for x in range(width):
+                cell = grid[y][x]
+                cy = 2 * y + 1
+                cx = 2 * x + 1
+
+                if cell.has_wall(1):
+                    buffer[cy - 1][cx] = "█"
+                if cell.has_wall(2):
+                    buffer[cy][cx + 1] = "█"
+                if cell.has_wall(4):
+                    buffer[cy + 1][cx] = "█"
+                if cell.has_wall(8):
+                    buffer[cy][cx - 1] = "█"
+
+                coord = (x, y)
+                if coord == head:
+                    buffer[cy][cx] = "\033[93m●\033[0m"
+                elif cell.is_pattern_42:
+                    buffer[cy][cx] = "\033[90m█\033[0m"
+
+        print("=== A-Maze-ing ===")
+        for grid_row in buffer:
+            line = "".join(
+                f"{wall_color}█{self._reset}" if char == "█" else char
+                for char in grid_row
+            )
+            print(line)
+
+        print()
+        print("Generating maze...")
+
     def render(
         self,
         grid: list[list["Cell"]],
@@ -38,7 +96,7 @@ class TerminalRenderer:
         exit_pos: tuple[int, int],
         path: list[tuple[int, int]],
     ) -> None:
-        """Print the ASCII maze and menu options in the terminal."""
+        """Print the complete ASCII maze and menu options in terminal."""
         height = len(grid)
         width = len(grid[0]) if height > 0 else 0
 
@@ -49,62 +107,51 @@ class TerminalRenderer:
         wall_color = self.palettes[self.color_index]
         path_set = set(path) if (self.show_path and path) else set()
 
-        # Clear terminal screen
         os.system("clear" if os.name == "posix" else "cls")
 
-        # 2D character buffer: (2*height + 1) rows x (2*width + 1) cols
         buf_h = 2 * height + 1
         buf_w = 2 * width + 1
-        buffer: list[list[str]] = [[" " for _ in range(buf_w)] for _ in range(buf_h)]
+        buffer: list[list[str]] = [
+            [" " for _ in range(buf_w)] for _ in range(buf_h)
+        ]
 
-        # Fill default wall intersections/corners
-        for r in range(0, buf_h, 2):
-            for c in range(0, buf_w, 2):
-                buffer[r][c] = "█"
+        for r_idx in range(0, buf_h, 2):
+            for c_idx in range(0, buf_w, 2):
+                buffer[r_idx][c_idx] = "█"
 
-        # Populate cell walls and centers
         for y in range(height):
             for x in range(width):
                 cell = grid[y][x]
-                cy, cx = 2 * y + 1, 2 * x + 1
+                cy = 2 * y + 1
+                cx = 2 * x + 1
 
-                # North wall (bit 1)
                 if cell.has_wall(1):
                     buffer[cy - 1][cx] = "█"
-                # East wall (bit 2)
                 if cell.has_wall(2):
                     buffer[cy][cx + 1] = "█"
-                # South wall (bit 4)
                 if cell.has_wall(4):
                     buffer[cy + 1][cx] = "█"
-                # West wall (bit 8)
                 if cell.has_wall(8):
                     buffer[cy][cx - 1] = "█"
 
-                # Cell centers
                 coord = (x, y)
                 if coord == entry:
-                    buffer[cy][cx] = "\033[95mE\033[0m"  # Magenta Entry
+                    buffer[cy][cx] = "\033[95mE\033[0m"
                 elif coord == exit_pos:
-                    buffer[cy][cx] = "\033[91mX\033[0m"  # Red Exit
+                    buffer[cy][cx] = "\033[91mX\033[0m"
                 elif cell.is_pattern_42:
-                    buffer[cy][cx] = "\033[90m█\033[0m"  # Gray 42 pattern
+                    buffer[cy][cx] = "\033[90m█\033[0m"
                 elif coord in path_set:
-                    buffer[cy][cx] = "\033[94m•\033[0m"  # Blue solution path
+                    buffer[cy][cx] = "\033[94m•\033[0m"
 
-        # Print rendered grid with wall color palette
         print("=== A-Maze-ing ===")
-        for r in range(buf_h):
-            line_str = ""
-            for c in range(buf_w):
-                ch = buffer[r][c]
-                if ch == "█":
-                    line_str += f"{wall_color}█{self._reset}"
-                else:
-                    line_str += ch
-            print(line_str)
+        for grid_row in buffer:
+            line = "".join(
+                f"{wall_color}█{self._reset}" if char == "█" else char
+                for char in grid_row
+            )
+            print(line)
 
-        # Print menu options
         path_status = "ON" if self.show_path else "OFF"
         print(f"\nPath display: {path_status}")
         print("Menu:")

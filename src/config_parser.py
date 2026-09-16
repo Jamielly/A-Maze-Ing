@@ -13,6 +13,7 @@ class ConfigData:
     exit: tuple[int, int]
     output_file: str
     perfect: bool
+    animate: bool = False
     seed: int | None = None
 
 
@@ -120,6 +121,18 @@ class ConfigParser:
         if not output_file:
             raise ValueError("OUTPUT_FILE path cannot be empty.")
 
+        animate = False
+        if "ANIMATE" in raw_config:
+            animate_str = raw_config["ANIMATE"].lower()
+            if animate_str in ("true", "1", "yes"):
+                animate = True
+            elif animate_str in ("false", "0", "no"):
+                animate = False
+            else:
+                raise ValueError(
+                    "ANIMATE must be a boolean value (True or False)."
+                )
+
         seed: int | None = None
         if "SEED" in raw_config:
             try:
@@ -134,5 +147,6 @@ class ConfigParser:
             exit=exit_pos,
             output_file=output_file,
             perfect=perfect,
+            animate=animate,
             seed=seed,
         )

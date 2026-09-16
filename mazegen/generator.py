@@ -1,4 +1,3 @@
-```python
 """Generator module for creating perfect and playable mazes."""
 
 import random
@@ -8,13 +7,14 @@ from mazegen.cell import Cell
 from mazegen.solver import MazeSolver
 
 
-# Callback chamado durante a geração:
-# (grid_atual, coordenada_atual)
-StepCallback = Callable[[list[list[Cell]], tuple[int, int]], None]
+StepCallback = Callable[
+    [list[list[Cell]], tuple[int, int]],
+    None,
+]
 
 
 class MazeGenerator:
-    """Generates perfect or Pac-Man playable mazes with a 42 pattern."""
+    """Generate perfect or playable mazes with a 42 pattern."""
 
     def __init__(
         self,
@@ -25,15 +25,20 @@ class MazeGenerator:
         perfect: bool = False,
         seed: int | None = None,
     ) -> None:
-        """Initialize the maze generator with grid dimensions and options."""
+        """Initialize the maze generator."""
 
         if width <= 0 or height <= 0:
-            raise ValueError("Width and height must be positive integers.")
+            raise ValueError(
+                "Width and height must be positive integers."
+            )
 
         if not (0 <= entry[0] < width and 0 <= entry[1] < height):
             raise ValueError("Entry position is outside the maze.")
 
-        if not (0 <= exit_pos[0] < width and 0 <= exit_pos[1] < height):
+        if not (
+            0 <= exit_pos[0] < width
+            and 0 <= exit_pos[1] < height
+        ):
             raise ValueError("Exit position is outside the maze.")
 
         self.width = width
@@ -54,47 +59,34 @@ class MazeGenerator:
         self,
         step_callback: StepCallback | None = None,
     ) -> list[list[Cell]]:
-        """
-        Generate the complete maze.
+        """Generate the complete maze.
 
-        If ``step_callback`` is provided, it is called during the
-        generation process with:
-
-            (current_grid, current_position)
-
-        This can be used by a graphical interface to animate the
-        maze generation.
+        If ``step_callback`` is provided, it is called during DFS
+        generation with the current grid and the current position.
         """
 
-        # Reset the random generator when a seed was provided.
         if self.seed is not None:
             self._randomizer.seed(self.seed)
 
-        # Reserve the "42" pattern.
         self._embed_pattern_42()
-
-        # Generate the maze using DFS / Recursive Backtracking.
         self._carve_perfect_maze(step_callback)
 
-        # In playable mode, add extra connections.
         if not self.perfect:
             self._carve_playable_loops()
 
-        # Make sure neighboring cells have matching walls.
         self._enforce_wall_consistency()
 
-        # Final callback so the renderer receives the completed maze.
         if step_callback:
             step_callback(self.grid, self.entry)
 
         return self.grid
 
     def _embed_pattern_42(self) -> bool:
-        """Draw the '42' pattern in closed cells at the center of the grid."""
+        """Reserve the '42' pattern in the center of the maze."""
 
         pattern = [
-            "X   XXX",
-            "X     X",
+            "X X XXX",
+            "X X   X",
             "XXX XXX",
             "  X X  ",
             "  X XXX",
@@ -109,20 +101,22 @@ class MazeGenerator:
         ):
             return False
 
-        start_x = (self.width - pattern_width) // 2
-        start_y = (self.height - pattern_height) // 2
+        center = (self.width // 2, self.height // 2)
+        start_x = center[0] - (pattern_width // 2)
+        start_y = center[1] - (pattern_height // 2)
 
         for row, pattern_row in enumerate(pattern):
             for col, char in enumerate(pattern_row):
-
                 if char != "X":
                     continue
 
-                grid_x = start_x + col
-                grid_y = start_y + row
+                x = start_x + col
+                y = start_y + row
 
-                cell = self.grid[grid_y][grid_x]
+                if (x, y) in (self.entry, self.exit, center):
+                    continue
 
+                cell = self.grid[y][x]
                 cell.is_pattern_42 = True
                 cell.visited = True
                 cell.walls = 15
@@ -133,22 +127,16 @@ class MazeGenerator:
         self,
         step_callback: StepCallback | None = None,
     ) -> None:
-        """
-        Generate a maze using DFS / Recursive Backtracking.
-
-        The algorithm keeps a stack of cells and randomly chooses
-        unvisited neighbors. When no unvisited neighbor exists,
-        it backtracks.
-        """
+        """Generate the maze using iterative DFS backtracking."""
 
         start_x, start_y = self.entry
 
-        # If the entry happens to be inside the 42 pattern,
-        # use the first available cell instead.
         if self.grid[start_y][start_x].is_pattern_42:
             start_x, start_y = self._find_valid_start()
 
-        stack: list[tuple[int, int]] = [(start_x, start_y)]
+        stack: list[tuple[int, int]] = [
+            (start_x, start_y)
+        ]
 
         self.grid[start_y][start_x].visited = True
 
@@ -162,19 +150,17 @@ class MazeGenerator:
         while stack:
             current_x, current_y = stack[-1]
 
-            # Notify the renderer about the current position.
             if step_callback:
                 step_callback(
                     self.grid,
                     (current_x, current_y),
                 )
 
-            unvisited_neighbors: list[
+            neighbors: list[
                 tuple[int, int, int, int]
             ] = []
 
             for wall_bit, dx, dy, opposite_bit in directions:
-
                 next_x = current_x + dx
                 next_y = current_y + dy
 
@@ -192,7 +178,7 @@ class MazeGenerator:
                 if neighbor.is_pattern_42:
                     continue
 
-                unvisited_neighbors.append(
+                neighbors.append(
                     (
                         wall_bit,
                         dx,
@@ -201,43 +187,36 @@ class MazeGenerator:
                     )
                 )
 
-            if unvisited_neighbors:
-
-                wall_bit, dx, dy, opposite_bit = (
-                    self._randomizer.choice(
-                        unvisited_neighbors
-                    )
-                )
-
-                next_x = current_x + dx
-                next_y = current_y + dy
-
-                # Remove the wall between the current cell
-                # and the selected neighbor.
-                self.grid[current_y][current_x].set_wall(
-                    wall_bit,
-                    False,
-                )
-
-                self.grid[next_y][next_x].set_wall(
-                    opposite_bit,
-                    False,
-                )
-
-                self.grid[next_y][next_x].visited = True
-
-                stack.append((next_x, next_y))
-
-            else:
-                # No unvisited neighbors -> backtrack.
+            if not neighbors:
                 stack.pop()
+                continue
+
+            wall_bit, dx, dy, opposite_bit = (
+                self._randomizer.choice(neighbors)
+            )
+
+            next_x = current_x + dx
+            next_y = current_y + dy
+
+            self.grid[current_y][current_x].set_wall(
+                wall_bit,
+                False,
+            )
+
+            self.grid[next_y][next_x].set_wall(
+                opposite_bit,
+                False,
+            )
+
+            self.grid[next_y][next_x].visited = True
+
+            stack.append((next_x, next_y))
 
     def _find_valid_start(self) -> tuple[int, int]:
-        """Find the first cell that is not part of the 42 pattern."""
+        """Find the first cell outside the 42 pattern."""
 
         for y in range(self.height):
             for x in range(self.width):
-
                 if not self.grid[y][x].is_pattern_42:
                     return x, y
 
@@ -246,32 +225,23 @@ class MazeGenerator:
         )
 
     def _has_3x3_open(self) -> bool:
-        """
-        Check whether there is a completely open 3x3 area.
-
-        This prevents the playable maze from developing excessively
-        large open spaces.
-        """
+        """Check whether a completely open 3x3 area exists."""
 
         if self.width < 3 or self.height < 3:
             return False
 
         for y in range(self.height - 2):
             for x in range(self.width - 2):
-
                 open_area = True
 
                 for row in range(3):
                     for col in range(3):
-
                         cell = self.grid[y + row][x + col]
 
-                        # Check horizontal connections.
                         if col < 2 and cell.has_wall(Cell.EAST):
                             open_area = False
                             break
 
-                        # Check vertical connections.
                         if row < 2 and cell.has_wall(Cell.SOUTH):
                             open_area = False
                             break
@@ -285,12 +255,7 @@ class MazeGenerator:
         return False
 
     def _carve_playable_loops(self) -> None:
-        """
-        Open additional routes for Pac-Man style gameplay.
-
-        The extra connections create loops while avoiding excessively
-        large 3x3 completely open areas.
-        """
+        """Open additional routes for playable maze mode."""
 
         corners = [
             (0, 0),
@@ -306,83 +271,55 @@ class MazeGenerator:
 
         special_positions = corners + [center]
 
-        loop_directions = [
-            (
-                Cell.EAST,
-                1,
-                0,
-                Cell.WEST,
-            ),
-            (
-                Cell.SOUTH,
-                0,
-                1,
-                Cell.NORTH,
-            ),
+        directions = [
+            (Cell.EAST, 1, 0, Cell.WEST),
+            (Cell.SOUTH, 0, 1, Cell.NORTH),
         ]
 
-        # First create a few deterministic connections around
-        # corners and center.
-        for current_x, current_y in special_positions:
-
-            if not (
-                0 <= current_x < self.width
-                and 0 <= current_y < self.height
-            ):
+        for x, y in special_positions:
+            if self.grid[y][x].is_pattern_42:
                 continue
 
-            current_cell = self.grid[current_y][current_x]
-
-            if current_cell.is_pattern_42:
-                continue
-
-            for wall_bit, dx, dy, opposite_bit in loop_directions:
-
-                next_x = current_x + dx
-                next_y = current_y + dy
+            for wall_bit, dx, dy, opposite_bit in directions:
+                nx = x + dx
+                ny = y + dy
 
                 if not (
-                    0 <= next_x < self.width
-                    and 0 <= next_y < self.height
+                    0 <= nx < self.width
+                    and 0 <= ny < self.height
                 ):
                     continue
 
-                next_cell = self.grid[next_y][next_x]
-
-                if next_cell.is_pattern_42:
+                if self.grid[ny][nx].is_pattern_42:
                     continue
 
-                current_cell.set_wall(
+                self.grid[y][x].set_wall(
                     wall_bit,
                     False,
                 )
 
-                next_cell.set_wall(
+                self.grid[ny][nx].set_wall(
                     opposite_bit,
                     False,
                 )
 
-        # Find additional walls that can potentially be removed.
         candidate_walls: list[
             tuple[int, int, int, int, int, int]
         ] = []
 
         for y in range(self.height):
             for x in range(self.width):
+                cell = self.grid[y][x]
 
-                current_cell = self.grid[y][x]
-
-                if current_cell.is_pattern_42:
+                if cell.is_pattern_42:
                     continue
 
-                # East wall.
                 if x + 1 < self.width:
-
-                    next_cell = self.grid[y][x + 1]
+                    neighbor = self.grid[y][x + 1]
 
                     if (
-                        not next_cell.is_pattern_42
-                        and current_cell.has_wall(Cell.EAST)
+                        not neighbor.is_pattern_42
+                        and cell.has_wall(Cell.EAST)
                     ):
                         candidate_walls.append(
                             (
@@ -395,14 +332,12 @@ class MazeGenerator:
                             )
                         )
 
-                # South wall.
                 if y + 1 < self.height:
-
-                    next_cell = self.grid[y + 1][x]
+                    neighbor = self.grid[y + 1][x]
 
                     if (
-                        not next_cell.is_pattern_42
-                        and current_cell.has_wall(Cell.SOUTH)
+                        not neighbor.is_pattern_42
+                        and cell.has_wall(Cell.SOUTH)
                     ):
                         candidate_walls.append(
                             (
@@ -428,82 +363,106 @@ class MazeGenerator:
             x,
             y,
             wall_bit,
-            next_x,
-            next_y,
+            nx,
+            ny,
             opposite_bit,
         ) in candidate_walls:
 
             if loops_added >= target_loops:
                 break
 
-            current_cell = self.grid[y][x]
-            next_cell = self.grid[next_y][next_x]
+            cell = self.grid[y][x]
+            neighbor = self.grid[ny][nx]
 
-            # Temporarily remove the wall.
-            current_cell.set_wall(
-                wall_bit,
-                False,
-            )
+            cell.set_wall(wall_bit, False)
+            neighbor.set_wall(opposite_bit, False)
 
-            next_cell.set_wall(
-                opposite_bit,
-                False,
-            )
-
-            # Reject the change if it creates a large open area.
             if self._has_3x3_open():
-
-                current_cell.set_wall(
-                    wall_bit,
-                    True,
-                )
-
-                next_cell.set_wall(
-                    opposite_bit,
-                    True,
-                )
-
+                cell.set_wall(wall_bit, True)
+                neighbor.set_wall(opposite_bit, True)
             else:
                 loops_added += 1
 
+        self._braid_dead_ends()
+
+    def _braid_dead_ends(self) -> None:
+        """Remove dead-ends to make the board playable for Pac-Man."""
+        all_dirs = [
+            (Cell.NORTH, 0, -1, Cell.SOUTH),
+            (Cell.EAST, 1, 0, Cell.WEST),
+            (Cell.SOUTH, 0, 1, Cell.NORTH),
+            (Cell.WEST, -1, 0, Cell.EAST),
+        ]
+
+        changed = True
+        while changed:
+            changed = False
+            dead_ends: list[tuple[int, int]] = []
+            for y in range(self.height):
+                for x in range(self.width):
+                    cell = self.grid[y][x]
+                    if cell.is_pattern_42:
+                        continue
+                    wall_count = bin(cell.walls).count("1")
+                    if wall_count >= 3:
+                        dead_ends.append((x, y))
+
+            self._randomizer.shuffle(dead_ends)
+            for x, y in dead_ends:
+                cell = self.grid[y][x]
+                if bin(cell.walls).count("1") < 3:
+                    continue
+
+                candidates: list[tuple[int, int, int, int]] = []
+                for w_bit, dx, dy, opp_bit in all_dirs:
+                    if cell.has_wall(w_bit):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < self.width and 0 <= ny < self.height:
+                            neighbor = self.grid[ny][nx]
+                            if not neighbor.is_pattern_42:
+                                candidates.append((w_bit, nx, ny, opp_bit))
+
+                self._randomizer.shuffle(candidates)
+                for w_bit, nx, ny, opp_bit in candidates:
+                    neighbor = self.grid[ny][nx]
+                    cell.set_wall(w_bit, False)
+                    neighbor.set_wall(opp_bit, False)
+                    if self._has_3x3_open():
+                        cell.set_wall(w_bit, True)
+                        neighbor.set_wall(opp_bit, True)
+                    else:
+                        changed = True
+                        break
+
     def _enforce_wall_consistency(self) -> None:
-        """
-        Ensure shared walls between neighboring cells are identical.
-        """
+        """Ensure shared walls between neighboring cells match."""
 
         for y in range(self.height):
             for x in range(self.width):
-
                 cell = self.grid[y][x]
 
-                # East / West consistency.
                 if x + 1 < self.width:
+                    neighbor = self.grid[y][x + 1]
+                    has_wall = cell.has_wall(Cell.EAST)
 
-                    east_neighbor = self.grid[y][x + 1]
-
-                    has_east_wall = cell.has_wall(Cell.EAST)
-
-                    east_neighbor.set_wall(
+                    neighbor.set_wall(
                         Cell.WEST,
-                        has_east_wall,
+                        has_wall,
                     )
 
-                # South / North consistency.
                 if y + 1 < self.height:
+                    neighbor = self.grid[y + 1][x]
+                    has_wall = cell.has_wall(Cell.SOUTH)
 
-                    south_neighbor = self.grid[y + 1][x]
-
-                    has_south_wall = cell.has_wall(Cell.SOUTH)
-
-                    south_neighbor.set_wall(
+                    neighbor.set_wall(
                         Cell.NORTH,
-                        has_south_wall,
+                        has_wall,
                     )
 
     def get_solution(
         self,
     ) -> tuple[list[tuple[int, int]], str]:
-        """Return the shortest path coordinates and direction string."""
+        """Return the shortest path and its direction string."""
 
         solver = MazeSolver(
             self.grid,
@@ -515,4 +474,3 @@ class MazeGenerator:
             self.entry,
             self.exit,
         )
-```

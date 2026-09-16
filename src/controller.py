@@ -1,9 +1,9 @@
 """Controller module for managing the A-Maze-ing application flow."""
 
+from mazegen.generator import MazeGenerator, StepCallback
 from src.config_parser import ConfigData, ConfigParser
 from src.exporter import MazeExporter
 from src.renderer import TerminalRenderer
-from mazegen.generator import MazeGenerator
 
 
 class GameController:
@@ -20,7 +20,9 @@ class GameController:
         self.generator: MazeGenerator | None = None
 
     def _generate_and_export(
-        self, seed: int | None
+        self,
+        seed: int | None,
+        step_callback: StepCallback | None = None,
     ) -> tuple[list[tuple[int, int]], str]:
         """Generate a new maze and export it to the output file."""
         self.generator = MazeGenerator(
@@ -31,7 +33,7 @@ class GameController:
             perfect=self.config.perfect,
             seed=seed,
         )
-        grid = self.generator.generate()
+        grid = self.generator.generate(step_callback=step_callback)
         path_coords, path_str = self.generator.get_solution()
 
         self.exporter.export(
@@ -42,9 +44,13 @@ class GameController:
         )
         return path_coords, path_str
 
-    def run(self) -> None:
+    def run(self, step_callback: StepCallback | None = None) -> None:
         """Main interactive loop for the terminal application."""
-        path_coords, _ = self._generate_and_export(self.config.seed)
+        active_callback = step_callback if self.config.animate else None
+        path_coords, _ = self._generate_and_export(
+            self.config.seed,
+            step_callback=active_callback,
+        )
 
         while True:
             if self.generator is not None:
@@ -61,7 +67,10 @@ class GameController:
                 break
 
             if choice == "1":
-                path_coords, _ = self._generate_and_export(None)
+                path_coords, _ = self._generate_and_export(
+                    None,
+                    step_callback=active_callback,
+                )
             elif choice == "2":
                 self.renderer.toggle_path()
             elif choice == "3":
