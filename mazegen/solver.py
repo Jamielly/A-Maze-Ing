@@ -1,5 +1,3 @@
-"""Solver module using Breadth-First Search (BFS) for shortest path."""
-
 from collections import deque
 from typing import TYPE_CHECKING
 
@@ -8,12 +6,9 @@ if TYPE_CHECKING:
 
 
 class MazeSolver:
-    """Calculates the shortest path between entry and exit points."""
-
     def __init__(
         self, grid: list[list["Cell"]], width: int, height: int
     ) -> None:
-        """Initialize the solver with the maze grid."""
         self.grid: list[list["Cell"]] = grid
         self.width: int = width
         self.height: int = height
@@ -21,13 +16,10 @@ class MazeSolver:
     def find_shortest_path(
         self, start: tuple[int, int], end: tuple[int, int]
     ) -> tuple[list[tuple[int, int]], str]:
-        """Find the shortest path using Breadth-First Search (BFS)."""
         queue: deque[tuple[int, int]] = deque([start])
         parent: dict[tuple[int, int], tuple[tuple[int, int], str] | None] = {
             start: None
         }
-
-        # Cell wall bitmask constants: N=1, E=2, S=4, W=8
         directions = [
             (1, 0, -1, "N"),
             (2, 1, 0, "E"),

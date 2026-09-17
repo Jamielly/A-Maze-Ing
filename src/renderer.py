@@ -1,5 +1,3 @@
-"""Renderer module for ASCII maze terminal display with ANSI colors."""
-
 import shutil
 import sys
 from typing import TYPE_CHECKING
@@ -9,10 +7,7 @@ if TYPE_CHECKING:
 
 
 class TerminalRenderer:
-    """Render the maze and interactive menu using ANSI colors."""
-
     def __init__(self) -> None:
-        """Initialize renderer options and ANSI color palettes."""
         self.show_path: bool = True
         self.color_index: int = 0
         self.palettes: list[str] = [
@@ -24,11 +19,9 @@ class TerminalRenderer:
         self._reset: str = "\033[0m"
 
     def toggle_path(self) -> None:
-        """Toggle the shortest path display on or off."""
         self.show_path = not self.show_path
 
     def rotate_colors(self) -> None:
-        """Cycle to the next wall color palette."""
         self.color_index = (self.color_index + 1) % len(self.palettes)
 
     def _build_maze_lines(
@@ -40,13 +33,11 @@ class TerminalRenderer:
         path_set: set[tuple[int, int]] | None = None,
         head: tuple[int, int] | None = None,
     ) -> list[str]:
-        """Construct formatted ASCII strings for the maze grid."""
         height = len(grid)
         width = len(grid[0])
         lines: list[str] = []
 
         for y in range(height):
-            # Horizontal wall row above cell y
             row_top: list[str] = [f"{wall_color}█{self._reset}"]
             for x in range(width):
                 cell = grid[y][x]
@@ -57,7 +48,6 @@ class TerminalRenderer:
                 row_top.append(f"{wall_color}█{self._reset}")
             lines.append("".join(row_top))
 
-            # Cell interior and East wall
             row_mid: list[str] = [
                 f"{wall_color}█{self._reset}"
                 if grid[y][0].has_wall(8)
@@ -68,7 +58,7 @@ class TerminalRenderer:
                 coord = (x, y)
 
                 if coord == head:
-                    content = "\033[95m🛸\033[0m"
+                    content = "\033[95m🌕\033[0m"
                 elif coord == entry:
                     content = "\033[95m🛸\033[0m"
                 elif coord == exit_pos:
@@ -87,7 +77,6 @@ class TerminalRenderer:
                     row_mid.append(" ")
             lines.append("".join(row_mid))
 
-        # Bottom wall row below final cells
         row_bot: list[str] = [f"{wall_color}█{self._reset}"]
         for x in range(width):
             cell = grid[height - 1][x]
@@ -101,7 +90,6 @@ class TerminalRenderer:
         return lines
 
     def clear_screen(self) -> None:
-        """Clear the terminal screen and scrollback buffer."""
         sys.stdout.write("\033[H\033[2J\033[3J\033[?25l")
         sys.stdout.flush()
 
@@ -110,7 +98,6 @@ class TerminalRenderer:
         grid: list[list["Cell"]],
         head: tuple[int, int],
     ) -> None:
-        """Render a single animation frame during maze generation."""
         height = len(grid)
         if height == 0:
             return
@@ -159,7 +146,6 @@ class TerminalRenderer:
         exit_pos: tuple[int, int],
         path: list[tuple[int, int]],
     ) -> None:
-        """Print the complete ASCII maze and menu options in terminal."""
         height = len(grid)
         width = len(grid[0]) if height > 0 else 0
 

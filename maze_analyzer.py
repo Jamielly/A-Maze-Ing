@@ -43,8 +43,6 @@ Cell = Tuple[int, int]                 # an immutable (row, col) position
 
 
 class Direction(IntFlag):
-    """A wall side. The integer value is the bit used in the file encoding."""
-
     NORTH = 1
     EAST = 2
     SOUTH = 4
@@ -52,12 +50,10 @@ class Direction(IntFlag):
 
     @property
     def opposite(self) -> "Direction":
-        """The same wall seen from the neighbouring cell."""
         return _OPPOSITE[self]
 
     @property
     def step(self) -> Cell:
-        """The (row, col) offset to the neighbour on this side."""
         return _STEP[self]
 
 
@@ -91,13 +87,6 @@ class MazeError(Exception):
 # Model
 # --------------------------------------------------------------------------- #
 class Maze:
-    """A parsed maze: the wall grid plus the entry and exit cells.
-
-    The grid stores one integer per cell whose set bits mark *closed* walls,
-    so the whole connectivity analysis is pure bit-twiddling over a graph
-    whose edges are the open passages between adjacent cells.
-    """
-
     def __init__(self, grid: List[List[int]], entry: Optional[Cell],
                  exit: Optional[Cell]) -> None:
         self.grid = grid
@@ -106,7 +95,6 @@ class Maze:
         self.rows = len(grid)
         self.cols = len(grid[0]) if grid else 0
 
-    # -- construction ------------------------------------------------------- #
     @classmethod
     def from_file(cls, path: str) -> "Maze":
         """Parse *path*. Raise :class:`MazeError` on a malformed grid."""
@@ -155,7 +143,6 @@ class Maze:
         except ValueError:
             return None
 
-    # -- grid access -------------------------------------------------------- #
     def __contains__(self, cell: Cell) -> bool:
         row, col = cell
         return 0 <= row < self.rows and 0 <= col < self.cols
@@ -169,15 +156,12 @@ class Maze:
         return self.grid[cell[0]][cell[1]]
 
     def is_fully_closed(self, cell: Cell) -> bool:
-        """True for the isolated cells that draw the mandatory "42" pattern."""
         return self.walls(cell) == ALL_WALLS
 
-    # -- graph -------------------------------------------------------------- #
     def neighbour(self, cell: Cell, side: Direction) -> Cell:
         return cell[0] + side.step[0], cell[1] + side.step[1]
 
     def is_open(self, cell: Cell, side: Direction) -> bool:
-        """True if the wall on *side* is open from both adjacent cells."""
         other = self.neighbour(cell, side)
         if other not in self:
             return False
@@ -185,13 +169,11 @@ class Maze:
             and not (self.walls(other) & side.opposite)
 
     def passages(self, cell: Cell) -> Iterator[Cell]:
-        """Yield the neighbours *cell* shares an open passage with."""
         for side in Direction:
             if self.is_open(cell, side):
                 yield self.neighbour(cell, side)
 
     def region_of(self, start: Cell) -> FrozenSet[Cell]:
-        """Breadth-first set of cells reachable from *start*."""
         seen = {start}
         queue = deque([start])
         while queue:
@@ -202,7 +184,6 @@ class Maze:
         return frozenset(seen)
 
     def largest_region(self) -> FrozenSet[Cell]:
-        """Largest connected component, found in a single linear sweep."""
         seen: set[Cell] = set()
         best: FrozenSet[Cell] = frozenset()
         for cell in self:
@@ -215,7 +196,6 @@ class Maze:
         return best
 
     def incoherent_cells(self) -> Tuple[Cell, ...]:
-        """Cells whose wall encoding disagrees with a neighbour."""
         return tuple(
             cell
             for cell in self
@@ -228,9 +208,6 @@ class Maze:
         )
 
 
-# --------------------------------------------------------------------------- #
-# Analysis
-# --------------------------------------------------------------------------- #
 @dataclass(frozen=True)
 class MazeReport:
     """Connectivity measurements over the playable region of a maze.
@@ -247,7 +224,6 @@ class MazeReport:
 
     @cached_property
     def open_passages(self) -> int:
-        """Edges of the region graph (each counted once)."""
         return sum(
             1
             for cell in self.region
@@ -257,7 +233,6 @@ class MazeReport:
 
     @cached_property
     def potential_passages(self) -> int:
-        """Edges the region would have with every interior wall opened."""
         return sum(
             ((r, c + 1) in self.region) + ((r + 1, c) in self.region)
             for r, c in self.region
@@ -265,7 +240,6 @@ class MazeReport:
 
     @property
     def loops(self) -> int:
-        """Independent cycles: ``edges - nodes + 1`` for one component."""
         return self.open_passages - len(self.region) + 1
 
     @property
@@ -327,7 +301,6 @@ class MazeReport:
 
     @cached_property
     def unreachable_key_cells(self) -> Tuple[Cell, ...]:
-        """Pac-Man needs the four corners and the centre as corridors."""
         rows, cols = self.maze.rows, self.maze.cols
         key = {
             (0, 0), (0, cols - 1), (rows - 1, 0), (rows - 1, cols - 1),
@@ -337,7 +310,6 @@ class MazeReport:
 
 
 def analyze(maze: Maze) -> MazeReport:
-    """Pick the playable region (entry, or the largest one) and measure it."""
     if maze.entry is not None and maze.entry in maze:
         region, from_footer = maze.region_of(maze.entry), True
         entry = maze.entry
@@ -350,9 +322,6 @@ def analyze(maze: Maze) -> MazeReport:
     )
 
 
-# --------------------------------------------------------------------------- #
-# Verdict & reporting
-# --------------------------------------------------------------------------- #
 def verdict(report: MazeReport, min_loops: int, max_dead_ends: int) -> str:
     """Return the one-line conclusion for *report*.
 
@@ -417,7 +386,6 @@ def verdict(report: MazeReport, min_loops: int, max_dead_ends: int) -> str:
 
 
 def render(report: MazeReport, min_loops: int, max_dead_ends: int) -> str:
-    """Build the full human-readable report."""
     maze = report.maze
     real, enclosed = report.dead_ends
     lines = [
@@ -444,7 +412,6 @@ def render(report: MazeReport, min_loops: int, max_dead_ends: int) -> str:
 
 
 def _xy(cell: Cell) -> str:
-    """Render an internal ``(row, col)`` cell as the subject's ``(x, y)``."""
     return f"({cell[1]}, {cell[0]})"
 
 
@@ -473,9 +440,6 @@ def _coherence(cells: Tuple[Cell, ...]) -> str:
     return f"{len(cells)} mismatching cell(s) -> {shown}{extra}"
 
 
-# --------------------------------------------------------------------------- #
-# Entry point
-# --------------------------------------------------------------------------- #
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Analyze an a_maze_ing output file: wall coherence and "
@@ -497,7 +461,6 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
 
 def main(argv: List[str]) -> int:
-    """Read, analyze and report; return the process exit code."""
     args = parse_args(argv)
     try:
         maze = Maze.from_file(args.output_file)
@@ -516,6 +479,6 @@ if __name__ == "__main__":
         sys.exit(main(sys.argv[1:]))
     except KeyboardInterrupt:
         sys.exit(130)
-    except Exception as error:        # stay safe on any unexpected input
+    except Exception as error:
         print(f"Unexpected error while analyzing the maze: {error}")
         sys.exit(EXIT_MALFORMED)

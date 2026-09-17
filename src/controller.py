@@ -1,5 +1,3 @@
-"""Controller module for managing the A-Maze-ing application flow."""
-
 from mazegen.generator import MazeGenerator, StepCallback
 from src.config_parser import ConfigData, ConfigParser
 from src.exporter import MazeExporter
@@ -7,10 +5,7 @@ from src.renderer import TerminalRenderer
 
 
 class GameController:
-    """Coordinates configuration, generation, solving, and rendering."""
-
     def __init__(self, config_path: str) -> None:
-        """Load configuration and initialize controller state."""
         self.config_path: str = config_path
         parser = ConfigParser(config_path)
         self.config: ConfigData = parser.parse()
@@ -24,7 +19,6 @@ class GameController:
         seed: int | None,
         step_callback: StepCallback | None = None,
     ) -> tuple[list[tuple[int, int]], str]:
-        """Generate a new maze and export it to the output file."""
         self.generator = MazeGenerator(
             width=self.config.width,
             height=self.config.height,
@@ -45,7 +39,6 @@ class GameController:
         return path_coords, path_str
 
     def run(self, step_callback: StepCallback | None = None) -> None:
-        """Main interactive loop for the terminal application."""
         active_callback = step_callback if self.config.animate else None
         path_coords, _ = self._generate_and_export(
             self.config.seed,

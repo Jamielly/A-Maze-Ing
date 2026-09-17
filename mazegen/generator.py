@@ -1,5 +1,3 @@
-"""Generator module for creating perfect and playable mazes."""
-
 import random
 from typing import Callable
 
@@ -14,8 +12,6 @@ StepCallback = Callable[
 
 
 class MazeGenerator:
-    """Generate perfect or playable mazes with a 42 pattern."""
-
     def __init__(
         self,
         width: int,
@@ -25,11 +21,8 @@ class MazeGenerator:
         perfect: bool = False,
         seed: int | None = None,
     ) -> None:
-        """Initialize the maze generator."""
-
         if width <= 0 or height <= 0:
             raise ValueError(
-                "Width and height must be positive integers."
             )
 
         if not (0 <= entry[0] < width and 0 <= entry[1] < height):
@@ -59,12 +52,6 @@ class MazeGenerator:
         self,
         step_callback: StepCallback | None = None,
     ) -> list[list[Cell]]:
-        """Generate the complete maze.
-
-        If ``step_callback`` is provided, it is called during DFS
-        generation with the current grid and the current position.
-        """
-
         if self.seed is not None:
             self._randomizer.seed(self.seed)
 
@@ -82,8 +69,6 @@ class MazeGenerator:
         return self.grid
 
     def _embed_pattern_42(self) -> bool:
-        """Reserve the '42' pattern in the center of the maze."""
-
         pattern = [
             "X X XXX",
             "X X   X",
@@ -216,20 +201,15 @@ class MazeGenerator:
                 )
 
     def _find_valid_start(self) -> tuple[int, int]:
-        """Find the first cell outside the 42 pattern."""
-
         for y in range(self.height):
             for x in range(self.width):
                 if not self.grid[y][x].is_pattern_42:
                     return x, y
 
         raise ValueError(
-            "The maze does not contain any available cells."
         )
 
     def _has_3x3_open(self) -> bool:
-        """Check whether a completely open 3x3 area exists."""
-
         if self.width < 3 or self.height < 3:
             return False
 
@@ -258,8 +238,6 @@ class MazeGenerator:
         return False
 
     def _carve_playable_loops(self) -> None:
-        """Open additional routes for playable maze mode."""
-
         corners = [
             (0, 0),
             (self.width - 1, 0),
@@ -389,7 +367,6 @@ class MazeGenerator:
         self._braid_dead_ends()
 
     def _braid_dead_ends(self) -> None:
-        """Remove dead-ends to make the board playable for Pac-Man."""
         all_dirs = [
             (Cell.NORTH, 0, -1, Cell.SOUTH),
             (Cell.EAST, 1, 0, Cell.WEST),
@@ -438,8 +415,6 @@ class MazeGenerator:
                         break
 
     def _enforce_wall_consistency(self) -> None:
-        """Ensure shared walls between neighboring cells match."""
-
         for y in range(self.height):
             for x in range(self.width):
                 cell = self.grid[y][x]
@@ -465,8 +440,6 @@ class MazeGenerator:
     def get_solution(
         self,
     ) -> tuple[list[tuple[int, int]], str]:
-        """Return the shortest path and its direction string."""
-
         solver = MazeSolver(
             self.grid,
             self.width,

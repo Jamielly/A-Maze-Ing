@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jamielly-reis <jamsilva@student.42.fr>     +#+  +:+       +#+         #
+#    By: jamsilva <jamsilva@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/09/15 19:29:27 by jamsilva          #+#    #+#              #
-#    Updated: 2026/09/15 21:30:00 by jamsilva         ###   ########.fr        #
+#    Updated: 2026/09/17 09:28:34 by jamsilva         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -51,7 +51,7 @@ CYAN   := \033[36m
         package package-check \
         clean fclean re
 
-all: check run
+all: install lint check run
 
 help:
 	@printf "\n$(CYAN)A-Maze-ing / mazegen$(RESET)\n"
@@ -86,7 +86,7 @@ install: venv
 
 check: lint
 
-lint: venv
+lint: install venv
 	@printf "$(BLUE)→ Running Flake8...$(RESET)\n"
 	$(PYTHON_VENV) -m flake8 .
 	@printf "$(BLUE)→ Running Mypy...$(RESET)\n"

@@ -1,12 +1,8 @@
-"""Configuration parser module for A-Maze-ing."""
-
 from dataclasses import dataclass
 
 
 @dataclass
 class ConfigData:
-    """Container for validated configuration parameters."""
-
     width: int
     height: int
     entry: tuple[int, int]
@@ -18,14 +14,10 @@ class ConfigData:
 
 
 class ConfigParser:
-    """Parses and validates configuration files for maze generation."""
-
     def __init__(self, filepath: str) -> None:
-        """Initialize the parser with a configuration file path."""
         self.filepath: str = filepath
 
     def parse(self) -> ConfigData:
-        """Parse and validate the configuration file."""
         raw_config: dict[str, str] = {}
 
         try:

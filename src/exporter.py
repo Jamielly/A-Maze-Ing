@@ -1,5 +1,3 @@
-"""Exporter module for saving generated maze data to a text file."""
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -7,10 +5,7 @@ if TYPE_CHECKING:
 
 
 class MazeExporter:
-    """Exports maze structure and solution data to an output file."""
-
     def __init__(self, output_file: str) -> None:
-        """Initialize the exporter with an output file path."""
         self.output_file: str = output_file
 
     def export(
@@ -20,7 +15,6 @@ class MazeExporter:
         exit_pos: tuple[int, int],
         path_str: str,
     ) -> None:
-        """Save the maze structure and solution string to the output file."""
         lines: list[str] = []
 
         for row in grid:

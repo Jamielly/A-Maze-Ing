@@ -182,10 +182,10 @@ All AI-suggested code was manually reviewed, refactored, type-annotated (`mypy`)
 
 ### Roles
 
-| Member   | Login      | Responsibilities                                                                 |
-|----------|------------|-----------------------------------------------------------------------------------|
-| Jamielly | `jamsilva` | `mazegen` core generator, bitmask encoding, DFS carving, loop generation, `pyproject.toml` packaging |
-| Luana    | `luafranc` | `a_maze_ing.py` CLI, config parser, ANSI terminal rendering, interactive menu, animation callbacks |
+| Member   | Login      | Responsibilities                                                                                     |
+|----------|------------|------------------------------------------------------------------------------------------------------|
+|  Luana   | `luafranc` | `mazegen` core generator, bitmask encoding, DFS carving, loop generation, `pyproject.toml` packaging |
+| Jamielly | `jamsilva` | `a_maze_ing.py` CLI, config parser, ANSI terminal rendering, interactive menu, animation callbacks   |
 
 ### Planning & evolution
 

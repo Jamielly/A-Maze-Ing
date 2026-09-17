@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""Main entry point for the A-Maze-ing application."""
-
 import sys
 import time
 
@@ -17,7 +15,6 @@ def render_animation_frame(
     grid: list[list[Cell]],
     head: tuple[int, int],
 ) -> None:
-    """Render a single generation animation frame to terminal."""
     renderer.render_generation(grid, head)
     sys.stdout.flush()
     if ANIMATION_DELAY > 0:
@@ -25,7 +22,6 @@ def render_animation_frame(
 
 
 def main() -> None:
-    """Validate command line arguments and launch the maze application."""
     if len(sys.argv) != 2:
         sys.stderr.write("Usage: python3 a_maze_ing.py <config.txt>\n")
         sys.exit(1)
