@@ -38,18 +38,18 @@ class TerminalRenderer:
         lines: list[str] = []
 
         for y in range(height):
-            row_top: list[str] = [f"{wall_color}█{self._reset}"]
+            row_top: list[str] = [f"{wall_color}▓{self._reset}"]
             for x in range(width):
                 cell = grid[y][x]
                 if cell.has_wall(1):
-                    row_top.append(f"{wall_color}██{self._reset}")
+                    row_top.append(f"{wall_color}▓▓{self._reset}")
                 else:
                     row_top.append("  ")
-                row_top.append(f"{wall_color}█{self._reset}")
+                row_top.append(f"{wall_color}▓{self._reset}")
             lines.append("".join(row_top))
 
             row_mid: list[str] = [
-                f"{wall_color}█{self._reset}"
+                f"{wall_color}▓{self._reset}"
                 if grid[y][0].has_wall(8)
                 else " "
             ]
@@ -64,7 +64,7 @@ class TerminalRenderer:
                 elif coord == exit_pos:
                     content = "\033[91m🐄\033[0m"
                 elif cell.is_pattern_42:
-                    content = "\033[90m██\033[0m"
+                    content = "\033[90m█▓\033[0m"
                 elif path_set and coord in path_set:
                     content = "\033[94m •\033[0m"
                 else:
@@ -72,19 +72,19 @@ class TerminalRenderer:
 
                 row_mid.append(content)
                 if cell.has_wall(2):
-                    row_mid.append(f"{wall_color}█{self._reset}")
+                    row_mid.append(f"{wall_color}▓{self._reset}")
                 else:
                     row_mid.append(" ")
             lines.append("".join(row_mid))
 
-        row_bot: list[str] = [f"{wall_color}█{self._reset}"]
+        row_bot: list[str] = [f"{wall_color}▓{self._reset}"]
         for x in range(width):
             cell = grid[height - 1][x]
             if cell.has_wall(4):
-                row_bot.append(f"{wall_color}██{self._reset}")
+                row_bot.append(f"{wall_color}▓▓{self._reset}")
             else:
                 row_bot.append("  ")
-            row_bot.append(f"{wall_color}█{self._reset}")
+            row_bot.append(f"{wall_color}▓{self._reset}")
         lines.append("".join(row_bot))
 
         return lines
@@ -114,7 +114,11 @@ class TerminalRenderer:
         )
 
         term_lines = shutil.get_terminal_size().lines
-        header = "=== A-Maze-ing ==="
+        header = (
+                 "╭────────────────────────────────────╮\n"
+                 "│        A - M A Z E - I N G         │\n"
+                 "╰────────────────────────────────────╯"
+              )
         footer_status = "\033[93mGenerating maze...\033[0m"
 
         total_needed = len(maze_lines) + 3
@@ -167,7 +171,9 @@ class TerminalRenderer:
         path_status = "ON" if self.show_path else "OFF"
         output_parts = [
             "\033[H\033[2J\033[3J\033[?25h",
-            "=== A-Maze-ing ===",
+            "╭────────────────────────────────────╮\n"
+            "│        A - M A Z E - I N G         │\n"
+            "╰────────────────────────────────────╯",
             *maze_lines,
             f"\nPath display: {path_status}",
             "Menu:",
