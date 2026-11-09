@@ -9,6 +9,16 @@
 ![Lint](https://img.shields.io/badge/flake8_%2B_mypy-passing-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
 
+
+---
+
+## Illustration
+
+<p align="center">
+  <img src="docs/demo.gif" alt="A-Maze-ing em execução" width="720">
+</p>
+
+
 ---
 
 ## Description
